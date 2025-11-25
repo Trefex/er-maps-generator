@@ -55,7 +55,7 @@ def get_route_and_distance(api_key, origin, destination):
             leg = data["routes"][0]["legs"][0]
             distance = leg["distance"]["value"] / 1000  # Convert meters to kilometers
             duration = leg["duration"]["text"]
-            polyline = data["routes"][0]["overview_polyline"]["points"]
+            polyline = data["routes"][0]["overview_polyline"]["points"] 
             return distance, duration, polyline
         else:
            raise Exception(f"No routes found. Response was: {data}")
@@ -69,19 +69,19 @@ def generate_map_with_route(api_key, polyline):
         "size": "1200x800",  # Higher resolution map
         "scale": 2,  # Increased scale for better quality
         "maptype": "roadmap",
-        "path": f"enc:{polyline}",
-        "key": api_key
+        "path": f"enc:{polyline}", 
+        "key": api_key 
     }
     response = requests.get(static_map_url, params=params)
     if response.status_code == 200:
         return BytesIO(response.content)  # Return image as byte stream
     else:
         raise Exception(f"Error generating map: {response.status_code} - {response.text}")
-
+        
 def create_pdf(api_key, origin, destination, output_file=None):
     """Generate a PDF with the route map, distance, duration, and estimated cost."""
     # Get the current timestamp in ISO format
-    timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+    timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S") 
     
     # If no output file is provided, generate a default name
     if output_file is None:
