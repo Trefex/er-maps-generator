@@ -158,8 +158,8 @@ def main():
     parser.add_argument("--username", help="macOS username to fetch the API key from Keychain")
     parser.add_argument("--keychain_service", help="Service name in macOS Keychain to fetch the API key")
     parser.add_argument("--keeper-uid", help="Keeper Security Record UID to fetch the API key")
-    parser.add_argument("--origin", required=True, help="Origin address")
-    parser.add_argument("--destination", required=True, help="Destination address")
+    parser.add_argument("--origin", help="Origin address")
+    parser.add_argument("--destination", help="Destination address")
     parser.add_argument("--output", help="Output PDF filename")
     args = parser.parse_args()
     
@@ -170,6 +170,26 @@ def main():
         api_key = get_api_key_from_keychain(args.username, args.keychain_service)
     else:
         parser.error("You must provide either --keeper-uid OR both --username and --keychain_service to retrieve the API key.")
+    
+    # Prompt for origin if not provided
+    origin = args.origin
+    if not origin:
+        default_origin = "6, avenue des Hauts-Fourneaux, L-4362 Esch-sur-Alzette"
+        print(f"\nOrigin address [default: {default_origin}]:")
+        print("(e.g., 'Luxembourg Airport' or 'Gare Centrale Luxembourg')")
+        origin = input("> ").strip()
+        if not origin:
+            origin = default_origin
+            print(f"Using default origin: {origin}")
+    
+    # Prompt for destination if not provided
+    destination = args.destination
+    if not destination:
+        print("\nDestination address (e.g., 'Gare Centrale Luxembourg' or 'Place d'Armes, Luxembourg City'):")
+        destination = input("> ").strip()
+        if not destination:
+            print("Error: Destination address is required.")
+            sys.exit(1)
     
     # Prompt for output filename if not provided
     output_file = args.output
@@ -184,7 +204,7 @@ def main():
             output_file = str(output_path.with_suffix('.pdf'))
             print(f"Output filename changed to: {output_file}")
     
-    create_pdf(api_key, args.origin, args.destination, output_file)
+    create_pdf(api_key, origin, destination, output_file)
 
 if __name__ == "__main__":
     main()
