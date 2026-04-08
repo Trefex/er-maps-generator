@@ -70,27 +70,37 @@ def get_api_key_from_keeper(record_uid):
     raise Exception(f"Could not find password or note in Keeper record (type: {record.record_type})")
 
 def get_route_and_distance(api_key, origin, destination):
-    """Fetch route and distance using Google Maps Directions API."""
-    response = requests.get("https://maps.googleapis.com/maps/api/directions/json", params={
-        "origin": origin,
-        "destination": destination,
-        "mode": "driving",
-        "units": "metric",
-        "key": api_key
-    }, timeout=30)
-    
+    """Fetch route and distance using Google Maps Routes API."""
+    response = requests.post(
+        "https://routes.googleapis.com/directions/v2:computeRoutes",
+        headers={
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": api_key,
+            "X-Goog-FieldMask": "routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline,routes.localizedValues",
+        },
+        json={
+            "origin": {"address": origin},
+            "destination": {"address": destination},
+            "travelMode": "DRIVE",
+            "routingPreference": "TRAFFIC_AWARE",
+            "units": "METRIC",
+            "languageCode": "en-US",
+        },
+        timeout=30,
+    )
+
     if response.status_code != 200:
         raise Exception(f"Error fetching directions: {response.status_code} - {response.text}")
-    
+
     data = response.json()
     if not data.get("routes"):
         raise Exception(f"No routes found. Response: {data}")
-    
-    leg = data["routes"][0]["legs"][0]
-    distance = leg["distance"]["value"] / 1000  # Convert meters to kilometers
-    duration = leg["duration"]["text"]
-    polyline = data["routes"][0]["overview_polyline"]["points"]
-    
+
+    route = data["routes"][0]
+    distance = route["distanceMeters"] / 1000  # Convert meters to kilometers
+    duration = route["localizedValues"]["duration"]["text"]
+    polyline = route["polyline"]["encodedPolyline"]
+
     return distance, duration, polyline
 
 def generate_map_with_route(api_key, polyline):
