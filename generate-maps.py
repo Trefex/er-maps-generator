@@ -20,6 +20,27 @@ try:
 except ImportError:
     KEEPER_AVAILABLE = False
 
+
+def load_config(config_path):
+    """Load optional JSON config file with CLI defaults."""
+    if not config_path:
+        return {}
+
+    config_file = Path(config_path)
+    if not config_file.exists():
+        return {}
+
+    try:
+        with config_file.open("r", encoding="utf-8") as f:
+            config = json.load(f)
+    except json.JSONDecodeError as e:
+        raise Exception(f"Invalid JSON in config file {config_file}: {e}")
+
+    if not isinstance(config, dict):
+        raise Exception(f"Config file {config_file} must contain a JSON object.")
+
+    return config
+
 def get_api_key_from_keychain(username, service_name):
     """Fetch API key securely from macOS Keychain."""
     try:
@@ -165,6 +186,7 @@ def create_pdf(api_key, origin, destination, output_file=None):
 
 def main():
     parser = argparse.ArgumentParser(description="Generate a PDF with a route map, distance, duration, and estimated cost.")
+    parser.add_argument("--config", default=".er-maps-generator.json", help="Path to optional JSON config file")
     parser.add_argument("--username", help="macOS username to fetch the API key from Keychain")
     parser.add_argument("--keychain_service", help="Service name in macOS Keychain to fetch the API key")
     parser.add_argument("--keeper-uid", help="Keeper Security Record UID to fetch the API key")
@@ -172,14 +194,27 @@ def main():
     parser.add_argument("--destination", help="Destination address")
     parser.add_argument("--output", help="Output PDF filename")
     args = parser.parse_args()
+
+    config = load_config(args.config)
+
+    keeper_uid = args.keeper_uid or config.get("keeper_uid") or config.get("keeper-uid")
+    username = args.username or config.get("username") or os.environ.get("USER")
+    keychain_service = (
+        args.keychain_service
+        or config.get("keychain_service")
+        or config.get("keychain-service")
+    )
     
     # Get API key from specified source
-    if args.keeper_uid:
-        api_key = get_api_key_from_keeper(args.keeper_uid)
-    elif args.username and args.keychain_service:
-        api_key = get_api_key_from_keychain(args.username, args.keychain_service)
+    if keeper_uid:
+        api_key = get_api_key_from_keeper(keeper_uid)
+    elif username and keychain_service:
+        api_key = get_api_key_from_keychain(username, keychain_service)
     else:
-        parser.error("You must provide either --keeper-uid OR both --username and --keychain_service to retrieve the API key.")
+        parser.error(
+            "You must provide either --keeper-uid (or config.keeper_uid) OR "
+            "--keychain_service with --username (or config/default $USER) to retrieve the API key."
+        )
     
     # Prompt for origin if not provided
     origin = args.origin
