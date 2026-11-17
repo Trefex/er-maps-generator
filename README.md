@@ -9,7 +9,7 @@ A Python script to generate a PDF route map with distance, duration, and estimat
 
 ## Setup
 
-This project uses [mise](https://mise.jdx.dev/) to manage the Python version (3.14.0) and create the virtual environment automatically (`.venv`).
+This project uses [mise](https://mise.jdx.dev/) to manage the Python version (3.15.2) and create the virtual environment automatically (`.venv`).
 
 1. Install mise: <https://mise.jdx.dev/getting-started.html>
 2. Install the configured runtime(s):
@@ -25,6 +25,8 @@ mise run setup
 ```
 
 `mise install` installs runtimes (like Python). `mise run setup` installs pip packages from `requirements.txt`.
+
+If `.venv` already exists from a different Python version, recreate it before running `mise run setup`; virtual environments are tied to the Python interpreter that created them.
 
 ## Configuration (Optional)
 
