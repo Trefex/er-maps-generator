@@ -1,4 +1,4 @@
-fpdf2==2.8.7
-requests==2.33.1
-Pillow==12.2.0
-keepercommander==17.2.11
+fpdf2==2.9.0
+requests==2.34.2
+Pillow==13.0.0
+keepercommander==18.1.10
